@@ -17,14 +17,4 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
-  //temporario
-  @Post('createUser') 
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.authService.createUser(createUserDto);
-  }
-
-  @Get() 
-  async getUsers() {
-    return this.authService.getUsers();
-  }
 }

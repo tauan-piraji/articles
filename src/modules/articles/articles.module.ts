@@ -4,13 +4,14 @@ import { ArticlesController } from './controllers/articles.controller';
 import { ArticlesService } from './services/articles.service';
 import { Article } from './domain/entities/article.entity';
 import { ArticlesRepository } from '../../repository/articles.repository';
-import { UsersRepository } from '../../repository/user.repository';
 import { UsersModule } from '../users/users.module';
+import { LogsModule } from '../logs/logs.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Article]),
-    UsersModule
+    UsersModule,
+    LogsModule
   ],
   controllers: [ArticlesController],
   providers: [
@@ -19,4 +20,4 @@ import { UsersModule } from '../users/users.module';
   ],
   exports: [ArticlesService],
 })
-export class ArticlesModule {}
+export class ArticlesModule { }

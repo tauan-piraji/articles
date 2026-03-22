@@ -1,7 +1,5 @@
 import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
+  Injectable, HttpStatus
 } from '@nestjs/common';
 import { UsersRepository } from '../../../repository/user.repository';
 import * as bcrypt from 'bcrypt';
@@ -9,6 +7,7 @@ import { User } from '../domain/entities/user.entity';
 import { CreateUserDto } from '../domain/dtos/create-user.dto';
 import { UpdateUserDto } from '../domain/dtos/update-user.dto';
 import { UserDto } from '../domain/dtos/User.dto';
+import { GlobalException } from 'src/common/exceptions/global.exception';
 
 @Injectable()
 export class UserService {
@@ -18,7 +17,7 @@ export class UserService {
 
   async create(dto: CreateUserDto): Promise<User> {
     const exists = await this.usersRepo.findByEmail(dto.email);
-    if (exists) throw new ConflictException('Email already registered.');
+    if (exists) throw new GlobalException("Email já cadastrado", HttpStatus.CONFLICT);
 
     const password_hash = await bcrypt.hash(dto.password, 10);
 
@@ -41,7 +40,7 @@ export class UserService {
 
   async findOneById(id: string): Promise<UserDto> {
     const user = await this.usersRepo.findById(id);
-    if (!user) throw new NotFoundException('User not found.');
+    if (!user) throw new GlobalException('Usuario não encontrado', HttpStatus.NOT_FOUND);
     return new UserDto({
       name: user.name,
       email: user.email
@@ -50,7 +49,7 @@ export class UserService {
 
   async findOneByEmail(email: string): Promise<User> {
     const user = await this.usersRepo.findByEmail(email);
-    if (!user) throw new NotFoundException('User not found.');
+    if (!user) throw new GlobalException('Usuario não encontrado', HttpStatus.NOT_FOUND);
     return user;
   }
 
@@ -71,7 +70,7 @@ export class UserService {
     await this.usersRepo.update(id, allowed);
 
     const updated = await this.usersRepo.findById(id);
-    if (!updated) throw new NotFoundException('User not found');
+    if (!updated) throw new GlobalException('Usuario não encontrado', HttpStatus.NOT_FOUND);
 
     return new UserDto({
       name: updated.name,

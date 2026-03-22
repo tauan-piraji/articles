@@ -1,22 +1,22 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { ArticlesRepository } from '../../../repository/articles.repository';
-import { UsersRepository } from 'src/repository/user.repository';
-import { Article } from '../domain/entities/article.entity';
+import { UsersRepository } from '../../../repository/user.repository';
 import { CreateArticleDto } from '../domain/dtos/create-article.dto';
 import { UpdateArticleDto } from '../domain/dtos/update-article.dto';
 import { ArticleDto } from '../domain/dtos/article.dto';
-import { User } from '../../users/domain/entities/user.entity';
 import { UserRole } from '../../users/domain/enums/role.enum';
+import { GlobalException } from 'src/common/exceptions/global.exception';
 
 @Injectable()
 export class ArticlesService {
   constructor(private readonly articlesRepo: ArticlesRepository,
-              private readonly usersRepo: UsersRepository) { }
+    private readonly usersRepo: UsersRepository
+  ) { }
 
   async create(dto: CreateArticleDto, userPayload: any) {
 
     const user = await this.usersRepo.findById(userPayload.sub);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new GlobalException('Usuario não encontrado', HttpStatus.NOT_FOUND);
 
     const article = this.articlesRepo.create({
       ...dto,
@@ -27,7 +27,9 @@ export class ArticlesService {
   }
 
   async findAll(): Promise<ArticleDto[]> {
+
     const articles = await this.articlesRepo.find({ relations: ['user'] });
+
     return articles.map(a => new ArticleDto({
       id: a.id,
       userId: a.user.id,
@@ -41,7 +43,7 @@ export class ArticlesService {
 
   async findOne(id: string): Promise<ArticleDto> {
     const article = await this.articlesRepo.findById(id);
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article) throw new GlobalException('Artigo não encontrado', HttpStatus.NOT_FOUND);
     return new ArticleDto({
       id: article.id,
       userId: article.user.id,
@@ -55,13 +57,12 @@ export class ArticlesService {
 
   async update(id: string, dto: UpdateArticleDto, userPayload: any): Promise<ArticleDto> {
     const article = await this.articlesRepo.findById(id);
-    if (!article) throw new NotFoundException('Article not found');
-    
+    if (!article) throw new GlobalException('Artigo não encontrado', HttpStatus.NOT_FOUND);
 
     if (userPayload.role !== UserRole.ADMIN) {
-      
+
       if (article.user.id !== userPayload.sub) {
-        throw new ForbiddenException('You cannot edit this article');
+        throw new GlobalException('Você não pode alterar esse artigo', HttpStatus.FORBIDDEN);
       }
     }
 
@@ -82,13 +83,13 @@ export class ArticlesService {
   async remove(id: string, userPayload: any): Promise<void> {
 
     const article = await this.articlesRepo.findById(id);
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article) throw new GlobalException('Artigo não encontrado', HttpStatus.NOT_FOUND);
 
 
     if (userPayload.role !== UserRole.ADMIN) {
-      
+
       if (article.user.id !== userPayload.sub) {
-        throw new ForbiddenException('You cannot delete this article');
+        throw new GlobalException('Você não pode deletar esse artigo', HttpStatus.FORBIDDEN);
       }
     }
 
